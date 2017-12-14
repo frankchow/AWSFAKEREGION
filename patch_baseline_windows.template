@@ -1,0 +1,433 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "patch_baseline_windows.template - Creates the necessary resources for a Windows patch baseline. Please be aware that this template will create resources for which you will be charged.",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Parameters": [
+            "EnableExclusions",
+            "ExcludedKeys",
+            "ExcludedValues"
+          ],
+          "Label": {
+            "default": "Global Excluded Patches"
+          }
+        },
+        {
+          "Parameters": [
+            "ApprovedPatchesComplianceLevel",
+            "EnableOptionalPatches",
+            "ApprovedPatches"
+          ],
+          "Label": {
+            "default": "OPTIONAL Patching Rules"
+          }
+        },
+        {
+          "Parameters": [
+            "ProductValue",
+            "BaselinePatchGroup",
+            "Description",
+            "BaselineName",
+            "OperatingSystem"
+          ],
+          "Label": {
+            "default": "General Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "ClassificationValue",
+            "RejectedPatches",
+            "ComplianceLevel",
+            "ApproveAfterDays",
+            "SeverityValue"
+          ],
+          "Label": {
+            "default": "Patching Rules"
+          }
+        }
+      ],
+      "ParameterLabels": {
+        "ProductValue": {
+          "default": "Product Value"
+        },
+        "ClassificationValue": {
+          "default": "Classification Value"
+        },
+        "EnableExclusions": {
+          "default": "Enable Exclusions"
+        },
+        "BaselinePatchGroup": {
+          "default": "Patch Group"
+        },
+        "Description": {
+          "default": "Description"
+        },
+        "ApprovedPatchesComplianceLevel": {
+          "default": "Optional Approved Patches Severity Level"
+        },
+        "RejectedPatches": {
+          "default": "Explicitly rejected patches"
+        },
+        "BaselineName": {
+          "default": "Baseline Name"
+        },
+        "ExcludedKeys": {
+          "default": "Excluded Filter Key"
+        },
+        "ComplianceLevel": {
+          "default": "Compliance Alert"
+        },
+        "ApproveAfterDays": {
+          "default": "Approve After Days"
+        },
+        "SeverityValue": {
+          "default": "Patch Severity"
+        },
+        "ExcludedValues": {
+          "default": "Excluded Filter Values"
+        },
+        "EnableOptionalPatches": {
+          "default": "Enable Optional Patches"
+        },
+        "OperatingSystem": {
+          "default": "Operating System"
+        },
+        "ApprovedPatches": {
+          "default": "Optional Approved Patches"
+        }
+      }
+    }
+  },
+  "Parameters": {
+    "ProductValue": {
+      "Default": "WindowsServer2016",
+      "Type": "String",
+      "Description": "",
+      "AllowedValues": [
+        "Windows10",
+        "Windows10LTSB",
+        "Windows7",
+        "Windows8",
+        "Windows8.1",
+        "Windows8Embedded",
+        "WindowsServer2008",
+        "WindowsServer2008R2",
+        "WindowsServer2012",
+        "WindowsServer2012R2",
+        "WindowsServer2016"
+      ]
+    },
+    "ClassificationValue": {
+      "Default": "CriticalUpdates",
+      "Type": "String",
+      "Description": "Install patches the match the selected classification",
+      "AllowedValues": [
+        "CriticalUpdates",
+        "SecurityUpdates",
+        "ServicePacks",
+        "UpdateRollups",
+        "Updates"
+      ]
+    },
+    "EnableExclusions": {
+      "Default": "False",
+      "Type": "String",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    },
+    "BaselinePatchGroup": {
+      "Default": "",
+      "Type": "String",
+      "Description": "You create a patch group by using Amazon EC2 tags. Unlike other tagging scenarios across Systems Manager, a patch group must be defined with the tag key: Patch Group. Note that the key is case sensitive. You can specify any value, for example \"web servers,\" but the key must be Patch Group. https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-patch-working.html"
+    },
+    "Description": {
+      "Default": "Created with CloudFormation",
+      "Type": "String"
+    },
+    "EnableOptionalPatches": {
+      "Default": "False",
+      "Type": "String",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    },
+    "RejectedPatches": {
+      "Default": "",
+      "Type": "String",
+      "Description": "(OPTIONAL). A list of explicitly rejected patches for the baseline."
+    },
+    "ExcludedKeys": {
+      "Default": "MSRC_SEVERITY",
+      "Type": "String",
+      "Description": "The key for the filter",
+      "AllowedValues": [
+        "PRODUCT",
+        "CLASSIFICATION",
+        "MSRC_SEVERITY",
+        "PATCH_ID"
+      ]
+    },
+    "ApprovedPatches": {
+      "Default": "",
+      "Type": "CommaDelimitedList",
+      "Description": "(OPTIONAL). A list of explicitly approved patches for the baseline."
+    },
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": [
+        "Development",
+        "Integration",
+        "PreProduction",
+        "Production",
+        "Staging",
+        "Test"
+      ]
+    },
+    "ComplianceLevel": {
+      "Default": "CRITICAL",
+      "Type": "String",
+      "Description": "If patches are missing AWS will consider this a ______ problem, and alert accordingly.",
+      "AllowedValues": [
+        "CRITICAL",
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "INFORMATIONAL",
+        "UNSPECIFIED"
+      ]
+    },
+    "ApproveAfterDays": {
+      "Default": "3",
+      "Type": "String",
+      "Description": "The number of days after the release date of each patch matched by the rule the patch is marked as approved in the patch baseline. Max value 100."
+    },
+    "SeverityValue": {
+      "Default": "Critical",
+      "Type": "String",
+      "Description": "Install patches that match the severity level of the selected value",
+      "AllowedValues": [
+        "All",
+        "Critical",
+        "Important",
+        "Low",
+        "Moderate",
+        "Unspecified"
+      ]
+    },
+    "ExcludedValues": {
+      "Default": "",
+      "Type": "String",
+      "Description": "Comma seperated values for the filter key"
+    },
+    "ApprovedPatchesComplianceLevel": {
+      "Default": "CRITICAL",
+      "Type": "String",
+      "Description": "The compliance level for optional approved patches. This means that if an optional approved patch is reported as missing, this is the severity of the compliance violation.",
+      "AllowedValues": [
+        "CRITICAL",
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "INFORMATIONAL",
+        "UNSPECIFIED"
+      ]
+    },
+    "OperatingSystem": {
+      "Default": "WINDOWS",
+      "Type": "String",
+      "Description": "Defines the operating system the patch baseline applies to.",
+      "AllowedValues": [
+        "WINDOWS"
+      ]
+    },
+    "BaselineName": {
+      "Default": "Custom-Windows-Patch-Baseline",
+      "Type": "String",
+      "Description": "A name for the patch baseline"
+    }
+  },
+  "Conditions": {
+    "isRejectedPatchesSet": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "RejectedPatches"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "isPatchGroupsSet": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "BaselinePatchGroup"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "isOptionalPatchesEnabled": {
+      "Fn::Equals": [
+        {
+          "Ref": "EnableOptionalPatches"
+        },
+        "True"
+      ]
+    },
+    "isEnableExclusionsSet": {
+      "Fn::Equals": [
+        {
+          "Ref": "EnableExclusions"
+        },
+        "True"
+      ]
+    }
+  },
+  "Resources": {
+    "PatchBaseline": {
+      "Type": "AWS::SSM::PatchBaseline",
+      "Properties": {
+        "Description": {
+          "Ref": "Description"
+        },
+        "PatchGroups": {
+          "Fn::If": [
+            "isPatchGroupsSet",
+            [
+              {
+                "Ref": "BaselinePatchGroup"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "RejectedPatches": {
+          "Fn::If": [
+            "isRejectedPatchesSet",
+            [
+              {
+                "Ref": "RejectedPatches"
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "GlobalFilters": {
+          "Fn::If": [
+            "isEnableExclusionsSet",
+            {
+              "PatchFilters": [
+                {
+                  "Values": [
+                    {
+                      "Ref": "ExcludedValues"
+                    }
+                  ],
+                  "Key": {
+                    "Ref": "ExcludedKeys"
+                  }
+                }
+              ]
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "ApprovalRules": {
+          "PatchRules": [
+            {
+              "PatchFilterGroup": {
+                "PatchFilters": [
+                  {
+                    "Values": [
+                      {
+                        "Ref": "ClassificationValue"
+                      }
+                    ],
+                    "Key": "CLASSIFICATION"
+                  },
+                  {
+                    "Values": [
+                      {
+                        "Ref": "SeverityValue"
+                      }
+                    ],
+                    "Key": "MSRC_SEVERITY"
+                  },
+                  {
+                    "Values": [
+                      {
+                        "Ref": "ProductValue"
+                      }
+                    ],
+                    "Key": "PRODUCT"
+                  }
+                ]
+              },
+              "ComplianceLevel": {
+                "Ref": "ComplianceLevel"
+              },
+              "ApproveAfterDays": {
+                "Ref": "ApproveAfterDays"
+              }
+            }
+          ]
+        },
+        "ApprovedPatchesComplianceLevel": {
+          "Fn::If": [
+            "isOptionalPatchesEnabled",
+            {
+              "Ref": "ApprovedPatchesComplianceLevel"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "OperatingSystem": {
+          "Ref": "OperatingSystem"
+        },
+        "ApprovedPatches": {
+          "Fn::If": [
+            "isOptionalPatchesEnabled",
+            {
+              "Ref": "ApprovedPatches"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "Name": {
+          "Ref": "BaselineName"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "PatchBaselineID": {
+      "Description": "The physical ID of the Patch Baseline",
+      "Value": {
+        "Ref": "PatchBaseline"
+      }
+    }
+  }
+}

@@ -1,0 +1,589 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "elasticache_memcached.template - AWS Cluster for ElastiCache",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Parameters": [
+            "ElastiCacheSubnets",
+            "VPCSecurityGroupIds"
+          ],
+          "Label": {
+            "default": "VPC Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "ClusterName",
+            "InstanceClass",
+            "ElastiCacheEngineType",
+            "NumberOfNodes"
+          ],
+          "Label": {
+            "default": "ElastiCache Basic Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "PreferredMaintenanceWindow"
+          ],
+          "Label": {
+            "default": "Backup / Maintenance"
+          }
+        },
+        {
+          "Parameters": [
+            "CacheClusterPort"
+          ],
+          "Label": {
+            "default": "ElastiCache Advanced Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "CurrConnectionsThreshold",
+            "CurrConnectionsEvaluations",
+            "EvictionsEvaluations",
+            "SwapUsageThreshold",
+            "CpuHighThreshold",
+            "CpuHighEvaluations",
+            "SwapUsageEvaluations",
+            "EvictionsThreshold"
+          ],
+          "Label": {
+            "default": "Cloudwatch Alarm Configuration"
+          }
+        }
+      ]
+    }
+  },
+  "Parameters": {
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": [
+        "Development",
+        "Integration",
+        "PreProduction",
+        "Production",
+        "Staging",
+        "Test"
+      ]
+    },
+    "EvictionsThreshold": {
+      "Default": "",
+      "AllowedPattern": "^[0-9]*$",
+      "Type": "String",
+      "Description": "The max evictions before generating an alarm.",
+      "ConstraintDescription": "Must be a valid integer."
+    },
+    "InternalRecordName": {
+      "Default": "",
+      "Type": "String",
+      "Description": "Record Name for the new Resource Record in the Internal Hosted Zone"
+    },
+    "ElastiCacheSubnets": {
+      "Type": "List<AWS::EC2::Subnet::Id>",
+      "Description": "Subnets for use with this cache cluster"
+    },
+    "ClusterName": {
+      "Default": "MyMemcachedCluster",
+      "Type": "String",
+      "Description": "Name of Cluster"
+    },
+    "CurrConnectionsEvaluations": {
+      "Default": "5",
+      "AllowedPattern": "([0-9]+)",
+      "Type": "String",
+      "Description": "The number of minutes current connections must remain above the specified threshold to generate an alarm.",
+      "ConstraintDescription": "Must be a valid integer."
+    },
+    "EvictionsEvaluations": {
+      "Default": "5",
+      "AllowedPattern": "([0-9]+)",
+      "Type": "String",
+      "Description": "The number of minutes Evictions must remain above the specified threshold to generate an alarm.",
+      "ConstraintDescription": "Must be a valid integer."
+    },
+    "SwapUsageThreshold": {
+      "Default": "52428800",
+      "AllowedPattern": "^[0-9]*$",
+      "Type": "String",
+      "Description": "The max SwapUsage before generating an alarm.",
+      "ConstraintDescription": "Must be a valid integer."
+    },
+    "VPCSecurityGroupIds": {
+      "Default": "",
+      "Type": "List<AWS::EC2::SecurityGroup::Id>",
+      "Description": "Existing security group being used by Elasticache cluster."
+    },
+    "InternalZoneName": {
+      "Default": "",
+      "Type": "String",
+      "Description": "TLD for Internal Hosted Zone"
+    },
+    "CpuHighEvaluations": {
+      "Default": "5",
+      "AllowedPattern": "([0-9]+)",
+      "Type": "String",
+      "Description": "The number of minutes CPU usage must remain above the specified threshold to generate an alarm.",
+      "ConstraintDescription": "Must be a valid integer."
+    },
+    "InstanceClass": {
+      "Default": "cache.m3.medium",
+      "Type": "String",
+      "Description": "The compute and memory capacity of the nodes within the ElastiCache cluster",
+      "AllowedValues": [
+        "cache.t2.micro",
+        "cache.t2.small",
+        "cache.t2.medium",
+        "cache.c1.xlarge",
+        "cache.m3.medium",
+        "cache.m3.large",
+        "cache.m3.xlarge",
+        "cache.m3.2xlarge",
+        "cache.m4.large",
+        "cache.m4.xlarge",
+        "cache.m4.2xlarge",
+        "cache.m4.4xlarge",
+        "cache.m4.10xlarge",
+        "cache.r3.large",
+        "cache.r3.xlarge",
+        "cache.r3.2xlarge",
+        "cache.r3.4xlarge",
+        "cache.r3.8xlarge"
+      ]
+    },
+    "ElastiCacheEngineType": {
+      "Default": "memcached14",
+      "Type": "String",
+      "Description": "The name of the cache engine to be used for this memcached cache cluster",
+      "AllowedValues": [
+        "memcached14"
+      ]
+    },
+    "CacheClusterPort": {
+      "Default": "11211",
+      "MinValue": "1024",
+      "Type": "Number",
+      "Description": "The port number on which each of the cache nodes will accept connections",
+      "MaxValue": "65535"
+    },
+    "PreferredMaintenanceWindow": {
+      "Default": "Sun:05:00-Sun:07:00",
+      "Type": "String",
+      "Description": "The weekly time range (in UTC) during which system maintenance can occur."
+    },
+    "SwapUsageEvaluations": {
+      "Default": "5",
+      "AllowedPattern": "([0-9]+)",
+      "Type": "String",
+      "Description": "The number of minutes SwapUsage must remain above the specified threshold to generate an alarm.",
+      "ConstraintDescription": "Must be a valid integer."
+    },
+    "CurrConnectionsThreshold": {
+      "Default": "",
+      "AllowedPattern": "^[0-9]*$",
+      "Type": "String",
+      "Description": "The max number of current connections before generating an alarm.",
+      "ConstraintDescription": "Must be a valid integer."
+    },
+    "NotificationTopic": {
+      "Default": "",
+      "Type": "String",
+      "Description": "SNS Topic ARN to notify if there are any alarms. OPTIONAL"
+    },
+    "CpuHighThreshold": {
+      "Description": "The max CPU Usage % before generating an alarm.",
+      "Default": "90",
+      "Type": "Number",
+      "MaxValue": 100,
+      "MinValue": 0,
+      "ConstraintDescription": "Must be a valid integer."
+    },
+    "InternalZoneId": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The Route53 Internal Hosted Zone ID"
+    },
+    "NumberOfNodes": {
+      "Default": "1",
+      "MinValue": "1",
+      "Type": "Number",
+      "Description": "The number of cache nodes within the ElastiCache cluster",
+      "MaxValue": "100"
+    }
+  },
+  "Conditions": {
+    "isInternalHostedZoneIdProvided": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "InternalZoneId"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "isNotification": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "NotificationTopic"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableEvictionsAlarm": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "EvictionsThreshold"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "EnableCurrConnectionsAlarm": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "CurrConnectionsThreshold"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "isMultiAZ": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "NumberOfNodes"
+            },
+            "1"
+          ]
+        }
+      ]
+    }
+  },
+  "Mappings": {
+    "ElastiCacheEngine": {
+      "memcached14": {
+        "Version": "1.4.34",
+        "Name": "memcached",
+        "Family": "memcached1.4"
+      }
+    }
+  },
+  "Resources": {
+    "ElastiCacheSubnetGroup": {
+      "Type": "AWS::ElastiCache::SubnetGroup",
+      "Properties": {
+        "SubnetIds": {
+          "Ref": "ElastiCacheSubnets"
+        },
+        "Description": "Subnets available for use with the cache cluster"
+      }
+    },
+    "EvictionsAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": {
+          "Ref": "EvictionsEvaluations"
+        },
+        "Dimensions": [
+          {
+            "Name": "CacheClusterId",
+            "Value": {
+              "Ref": "CacheCluster"
+            }
+          }
+        ],
+        "AlarmActions": [
+          {
+            "Fn::If": [
+              "isNotification",
+              {
+                "Ref": "NotificationTopic"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "AlarmDescription": {
+          "Fn::Sub": "CacheCluster ${CacheCluster} Evictions over ${EvictionsThreshold}"
+        },
+        "Namespace": "AWS/ElastiCache",
+        "Period": "60",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Statistic": "Average",
+        "Threshold": {
+          "Ref": "EvictionsThreshold"
+        },
+        "OKActions": [],
+        "MetricName": "Evictions"
+      },
+      "Condition": "EnableEvictionsAlarm"
+    },
+    "CacheCluster": {
+      "Type": "AWS::ElastiCache::CacheCluster",
+      "Properties": {
+        "Engine": {
+          "Fn::FindInMap": [
+            "ElastiCacheEngine",
+            {
+              "Ref": "ElastiCacheEngineType"
+            },
+            "Name"
+          ]
+        },
+        "CacheParameterGroupName": {
+          "Ref": "ParameterGroup"
+        },
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "Environment"
+            }
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Ref": "ClusterName"
+            }
+          },
+          {
+            "Key": "ServiceProvider",
+            "Value": "Rackspace"
+          }
+        ],
+        "NumCacheNodes": {
+          "Ref": "NumberOfNodes"
+        },
+        "VpcSecurityGroupIds": {
+          "Ref": "VPCSecurityGroupIds"
+        },
+        "EngineVersion": {
+          "Fn::FindInMap": [
+            "ElastiCacheEngine",
+            {
+              "Ref": "ElastiCacheEngineType"
+            },
+            "Version"
+          ]
+        },
+        "AZMode": {
+          "Fn::If": [
+            "isMultiAZ",
+            "cross-az",
+            "single-az"
+          ]
+        },
+        "CacheNodeType": {
+          "Ref": "InstanceClass"
+        },
+        "Port": {
+          "Ref": "CacheClusterPort"
+        },
+        "PreferredMaintenanceWindow": {
+          "Ref": "PreferredMaintenanceWindow"
+        },
+        "CacheSubnetGroupName": {
+          "Ref": "ElastiCacheSubnetGroup"
+        }
+      }
+    },
+    "CPUUtilizationAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": {
+          "Ref": "CpuHighEvaluations"
+        },
+        "Dimensions": [
+          {
+            "Name": "CacheClusterId",
+            "Value": {
+              "Ref": "CacheCluster"
+            }
+          }
+        ],
+        "AlarmActions": [
+          {
+            "Fn::If": [
+              "isNotification",
+              {
+                "Ref": "NotificationTopic"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "AlarmDescription": {
+          "Fn::Sub": "CacheCluster ${CacheCluster} CPUUtilization over ${CpuHighThreshold}"
+        },
+        "Namespace": "AWS/ElastiCache",
+        "Period": "60",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Statistic": "Average",
+        "Threshold": {
+          "Ref": "CpuHighThreshold"
+        },
+        "OKActions": [],
+        "MetricName": "CPUUtilization"
+      }
+    },
+    "SwapUsageAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": {
+          "Ref": "SwapUsageEvaluations"
+        },
+        "Dimensions": [
+          {
+            "Name": "CacheClusterId",
+            "Value": {
+              "Ref": "CacheCluster"
+            }
+          }
+        ],
+        "AlarmActions": [
+          {
+            "Fn::If": [
+              "isNotification",
+              {
+                "Ref": "NotificationTopic"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "AlarmDescription": {
+          "Fn::Sub": "CacheCluster ${CacheCluster} SwapUsage over ${SwapUsageThreshold}"
+        },
+        "Namespace": "AWS/ElastiCache",
+        "Period": "60",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Statistic": "Average",
+        "Threshold": {
+          "Ref": "SwapUsageThreshold"
+        },
+        "OKActions": [],
+        "MetricName": "SwapUsage"
+      }
+    },
+    "ParameterGroup": {
+      "DeletionPolicy": "Retain",
+      "Type": "AWS::ElastiCache::ParameterGroup",
+      "Properties": {
+        "Description": {
+          "Fn::Sub": "${Environment}-ParameterGroup"
+        },
+        "Properties": {
+          "Ref": "AWS::NoValue"
+        },
+        "CacheParameterGroupFamily": {
+          "Fn::FindInMap": [
+            "ElastiCacheEngine",
+            {
+              "Ref": "ElastiCacheEngineType"
+            },
+            "Family"
+          ]
+        }
+      }
+    },
+    "CurrConnectionsAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": {
+          "Ref": "CurrConnectionsEvaluations"
+        },
+        "Dimensions": [
+          {
+            "Name": "CacheClusterId",
+            "Value": {
+              "Ref": "CacheCluster"
+            }
+          }
+        ],
+        "AlarmActions": [
+          {
+            "Fn::If": [
+              "isNotification",
+              {
+                "Ref": "NotificationTopic"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ],
+        "AlarmDescription": {
+          "Fn::Sub": "CacheCluster ${CacheCluster} CurrConnections over ${CurrConnectionsThreshold}"
+        },
+        "Namespace": "AWS/ElastiCache",
+        "Period": "60",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Statistic": "Average",
+        "Threshold": {
+          "Ref": "CurrConnectionsThreshold"
+        },
+        "OKActions": [],
+        "MetricName": "CurrConnections"
+      },
+      "Condition": "EnableCurrConnectionsAlarm"
+    },
+    "InternalRecordSetMemcached": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "Comment": {
+          "Fn::Sub": "Internal Record Set for ${InternalRecordName}"
+        },
+        "Name": {
+          "Fn::Sub": "${InternalRecordName}.${InternalZoneName}."
+        },
+        "ResourceRecords": [
+          {
+            "Fn::GetAtt": [
+              "CacheCluster",
+              "ConfigurationEndpoint.Address"
+            ]
+          }
+        ],
+        "TTL": "300",
+        "HostedZoneId": {
+          "Ref": "InternalZoneId"
+        },
+        "Type": "CNAME"
+      },
+      "Condition": "isInternalHostedZoneIdProvided"
+    }
+  },
+  "Outputs": {
+    "MemcachedConnection": {
+      "Value": {
+        "Fn::Sub": "${CacheCluster.ConfigurationEndpoint.Address}:${CacheCluster.ConfigurationEndpoint.Port}"
+      }
+    }
+  }
+}

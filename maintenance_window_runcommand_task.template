@@ -1,0 +1,575 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "maintenance_window_runcommand_task.template - Creates the necessary resources for a Run Command maintenance window task. Please be aware that this template will create resources for which you will be charged.",
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterGroups": [
+        {
+          "Parameters": [
+            "MaxErrors",
+            "Priority",
+            "TaskParameters",
+            "TaskType",
+            "MaxConcurrency",
+            "TaskDescription"
+          ],
+          "Label": {
+            "default": "General Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "NotificationType",
+            "NotificationTopic",
+            "NotificationEvents"
+          ],
+          "Label": {
+            "default": "Notifications (REQUIRED)"
+          }
+        },
+        {
+          "Parameters": [
+            "OutputS3BucketName",
+            "S3OutputLogging",
+            "OutputS3BucketPrefix"
+          ],
+          "Label": {
+            "default": "Run Command Output"
+          }
+        },
+        {
+          "Parameters": [
+            "RunCommandServiceRole",
+            "TimeoutSeconds",
+            "Comment"
+          ],
+          "Label": {
+            "default": "Task Settings"
+          }
+        },
+        {
+          "Parameters": [
+            "DocumentHash",
+            "RunCommandParameters",
+            "DocumentHashType"
+          ],
+          "Label": {
+            "default": "OPTIONAL Additonal SSM Document Configuraiton"
+          }
+        },
+        {
+          "Parameters": [
+            "ServiceRoleArn",
+            "TaskArn",
+            "TaskName"
+          ],
+          "Label": {
+            "default": "SSM Document Configuration"
+          }
+        },
+        {
+          "Parameters": [
+            "S3Region",
+            "S3BucketPrefix",
+            "S3Logging",
+            "S3BucketName"
+          ],
+          "Label": {
+            "default": "S3 Logging"
+          }
+        },
+        {
+          "Parameters": [
+            "Values",
+            "WindowId",
+            "Targets"
+          ],
+          "Label": {
+            "default": "Target Configuration"
+          }
+        }
+      ],
+      "ParameterLabels": {
+        "MaxErrors": {
+          "default": "Maximum Errors"
+        },
+        "S3Region": {
+          "default": "S3 Region"
+        },
+        "DocumentHash": {
+          "default": "Document Hash"
+        },
+        "OutputS3BucketName": {
+          "default": "S3 Output bucket"
+        },
+        "S3BucketPrefix": {
+          "default": "S3 Prefix"
+        },
+        "Priority": {
+          "default": "Task Priority"
+        },
+        "S3OutputLogging": {
+          "default": "Output to S3"
+        },
+        "TaskParameters": {
+          "default": "Task Parameters"
+        },
+        "ServiceRoleArn": {
+          "default": "Task Service Role ARN"
+        },
+        "RunCommandParameters": {
+          "default": "Raw Run Command Paramaters"
+        },
+        "NotificationType": {
+          "default": "Notification Type"
+        },
+        "OutputS3BucketPrefix": {
+          "default": "S3 Bucket prefix"
+        },
+        "TaskType": {
+          "default": "Task Type"
+        },
+        "RunCommandServiceRole": {
+          "default": "Run Command Service Role ARN"
+        },
+        "TaskArn": {
+          "default": "Task ARN or Document Name"
+        },
+        "MaxConcurrency": {
+          "default": "Max Concurrent Targets"
+        },
+        "TimeoutSeconds": {
+          "default": "Timeout in Seconds"
+        },
+        "Values": {
+          "default": "Maintenance Window Targets"
+        },
+        "NotificationTopic": {
+          "default": "Notification ARN"
+        },
+        "TaskName": {
+          "default": "Task Name"
+        },
+        "Comment": {
+          "default": "Comment"
+        },
+        "S3Logging": {
+          "default": "Enable Logging"
+        },
+        "TaskDescription": {
+          "default": "Description"
+        },
+        "DocumentHashType": {
+          "default": "Document Hash Type"
+        },
+        "WindowId": {
+          "default": "Maintenance Window ID"
+        },
+        "S3BucketName": {
+          "default": "S3 Bucket Name"
+        },
+        "NotificationEvents": {
+          "default": "Notification Events"
+        },
+        "Targets": {
+          "default": "Target Type"
+        }
+      }
+    }
+  },
+  "Parameters": {
+    "MaxErrors": {
+      "Default": "1",
+      "Type": "String",
+      "Description": "The maximum number of errors allowed before this task stops being scheduled. Minimum length of 1. Maximum length of 7"
+    },
+    "S3Region": {
+      "Default": "us-east-1",
+      "Type": "String",
+      "Description": "Region S3 Bucket is in."
+    },
+    "DocumentHash": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The SHA-256 or SHA-1 hash created by the system when the document was created. SHA-1 hashes have been deprecated."
+    },
+    "OutputS3BucketName": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The name of the Amazon S3 bucket."
+    },
+    "S3BucketPrefix": {
+      "Default": "",
+      "Type": "String",
+      "Description": "S3 Bucket prefix."
+    },
+    "Priority": {
+      "Default": "0",
+      "Type": "String",
+      "Description": "The priority of the task in the Maintenance Window. The lower the number, the higher the priority. Tasks that have the same priority are scheduled in parallel."
+    },
+    "S3OutputLogging": {
+      "Default": "False",
+      "Type": "String",
+      "Description": "Send Runcommand output to S3",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    },
+    "TaskParameters": {
+      "Default": "",
+      "Type": "String",
+      "Description": "(OPTIONAL) The parameters to pass to the task when it's executed."
+    },
+    "ServiceRoleArn": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The ARN of the role that's used when the task is executed."
+    },
+    "RunCommandParameters": {
+      "Default": "",
+      "Type": "String",
+      "Description": "OPTIONAL. If you are NOT using a SSM Document that was already uploaded to the console, then the parameters for the document contents for the RUN_COMMAND task go here as a string. (NOT RECOMMENDED)"
+    },
+    "NotificationType": {
+      "Default": "Command",
+      "Type": "String",
+      "Description": "Command: Receive notification when the status of a command changes. Invocation: For commands sent to multiple instances, receive notification on a per-instance basis when the status of a command changes.",
+      "AllowedValues": [
+        "Command",
+        "Invocation"
+      ]
+    },
+    "WindowId": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The ID of the Maintenance Window where the task is registered. Format mw-xxxxxxxxxxxx"
+    },
+    "TaskType": {
+      "Default": "RUN_COMMAND",
+      "Type": "String",
+      "Description": "The type of task.",
+      "AllowedValues": [
+        "RUN_COMMAND"
+      ]
+    },
+    "RunCommandServiceRole": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The IAM service role that's used during task execution."
+    },
+    "TaskArn": {
+      "Default": "AWS-UpdateEC2Config",
+      "Type": "String",
+      "Description": "The ARN or Document resource that the task uses during execution. https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ssm-maintenancewindowtask.html#cfn-ssm-maintenancewindowtask-taskarn"
+    },
+    "MaxConcurrency": {
+      "Default": "5",
+      "Type": "String",
+      "Description": "The maximum number of targets that you can run this task for, in parallel."
+    },
+    "TimeoutSeconds": {
+      "Default": "300",
+      "Type": "String",
+      "Description": "If this time is reached and the command has not already started executing, it doesn not execute."
+    },
+    "Values": {
+      "Default": "",
+      "Type": "CommaDelimitedList",
+      "Description": "Comma delimited list of Physical Maintenance Window Target IDs or Instance IDs."
+    },
+    "NotificationTopic": {
+      "Default": "",
+      "Type": "String",
+      "Description": "REQUIRED. Full ARN of notification topic."
+    },
+    "TaskName": {
+      "AllowedPattern": "([A-Za-z0-9._\\-]+)",
+      "Default": "Maintenance-Window-RunCommand-Task",
+      "Type": "String",
+      "Description": "An optional name for the task. Must contain only letters, numbers,  periods (.), underscores (_), backslashes (\\), and dashes (-)."
+    },
+    "Comment": {
+      "Default": "Created with CloudFormation",
+      "Type": "String",
+      "Description": "Information about the command(s) to execute."
+    },
+    "Environment": {
+      "Default": "Development",
+      "Type": "String",
+      "Description": "Application environment for which this network is being created. e.g. Development/Production.",
+      "AllowedValues": [
+        "Development",
+        "Integration",
+        "PreProduction",
+        "Production",
+        "Staging",
+        "Test"
+      ]
+    },
+    "S3Logging": {
+      "Default": "False",
+      "Type": "String",
+      "AllowedValues": [
+        "False",
+        "True"
+      ]
+    },
+    "TaskDescription": {
+      "Default": "Created with CloudFormation",
+      "Type": "String",
+      "Description": "A description of the task."
+    },
+    "DocumentHashType": {
+      "Default": "Sha256",
+      "Type": "String",
+      "Description": "SHA-256 or SHA-1. SHA-1 hashes have been deprecated.",
+      "AllowedValues": [
+        "Sha256",
+        "Sha1"
+      ]
+    },
+    "OutputS3BucketPrefix": {
+      "Default": "",
+      "Type": "String",
+      "Description": "The Amazon S3 bucket subfolder."
+    },
+    "S3BucketName": {
+      "Default": "logbucket",
+      "Type": "String",
+      "Description": "Name of S3 Bucket"
+    },
+    "NotificationEvents": {
+      "Default": "Success,Failed",
+      "Type": "CommaDelimitedList",
+      "Description": "REQUIRED. Valid values are All, InProgress, Success, TimedOut, Cancelled, and Failed. Seperate multiple values with a comma."
+    },
+    "Targets": {
+      "Default": "WindowTargetIds",
+      "Type": "String",
+      "Description": "The Maintenance Window Target ID from the maintenance window target template or InstanceIds",
+      "AllowedValues": [
+        "WindowTargetIds",
+        "InstanceIds"
+      ]
+    }
+  },
+  "Conditions": {
+    "TaskParamatersSet": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "TaskParameters"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "isOutputLoggingEnabled": {
+      "Fn::Equals": [
+        {
+          "Ref": "S3OutputLogging"
+        },
+        "True"
+      ]
+    },
+    "isLoggingEnabled": {
+      "Fn::Equals": [
+        {
+          "Ref": "S3Logging"
+        },
+        "True"
+      ]
+    },
+    "DocumentHashSet": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "DocumentHash"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "isOptionalParametersSet": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "RunCommandParameters"
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "MaintenanceWindowTask": {
+      "Type": "AWS::SSM::MaintenanceWindowTask",
+      "Properties": {
+        "LoggingInfo": {
+          "Fn::If": [
+            "isLoggingEnabled",
+            [
+              {
+                "S3Bucket": {
+                  "Ref": "S3BucketName"
+                },
+                "Region": {
+                  "Ref": "S3Region"
+                },
+                "S3Prefix": {
+                  "Ref": "S3BucketPrefix"
+                }
+              }
+            ],
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "ServiceRoleArn": {
+          "Ref": "ServiceRoleArn"
+        },
+        "MaxErrors": {
+          "Ref": "MaxErrors"
+        },
+        "TaskArn": {
+          "Ref": "TaskArn"
+        },
+        "Name": {
+          "Ref": "TaskName"
+        },
+        "Targets": [
+          {
+            "Values": {
+              "Ref": "Values"
+            },
+            "Key": {
+              "Ref": "Targets"
+            }
+          }
+        ],
+        "Priority": {
+          "Ref": "Priority"
+        },
+        "TaskInvocationParameters": {
+          "MaintenanceWindowRunCommandParameters": {
+            "ServiceRoleArn": {
+              "Ref": "RunCommandServiceRole"
+            },
+            "Comment": {
+              "Ref": "Comment"
+            },
+            "TimeoutSeconds": {
+              "Ref": "TimeoutSeconds"
+            },
+            "Parameters": {
+              "Fn::If": [
+                "isOptionalParametersSet",
+                {
+                  "Ref": "RunCommandParameters"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            },
+            "DocumentHash": {
+              "Fn::If": [
+                "DocumentHashSet",
+                {
+                  "Ref": "DocumentHash"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            },
+            "OutputS3BucketName": {
+              "Fn::If": [
+                "isOutputLoggingEnabled",
+                {
+                  "Ref": "OutputS3BucketName"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            },
+            "NotificationConfig": {
+              "NotificationArn": {
+                "Ref": "NotificationTopic"
+              },
+              "NotificationEvents": {
+                "Ref": "NotificationEvents"
+              },
+              "NotificationType": {
+                "Ref": "NotificationType"
+              }
+            },
+            "DocumentHashType": {
+              "Fn::If": [
+                "DocumentHashSet",
+                {
+                  "Ref": "DocumentHashType"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            },
+            "OutputS3KeyPrefix": {
+              "Fn::If": [
+                "isOutputLoggingEnabled",
+                {
+                  "Ref": "OutputS3BucketPrefix"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            }
+          }
+        },
+        "WindowId": {
+          "Ref": "WindowId"
+        },
+        "TaskType": {
+          "Ref": "TaskType"
+        },
+        "Description": {
+          "Ref": "TaskDescription"
+        },
+        "TaskParameters": {
+          "Fn::If": [
+            "TaskParamatersSet",
+            {
+              "Ref": "TaskParameters"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "MaxConcurrency": {
+          "Ref": "MaxConcurrency"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "MaintenanceWindowTaskID": {
+      "Description": "Maintenance Window Task ID",
+      "Value": {
+        "Ref": "MaintenanceWindowTask"
+      }
+    }
+  }
+}
