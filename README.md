@@ -24,13 +24,39 @@ Bra Bra Bra | 2017-Dec-?? |  | XXXX
 ### Implementation reminders:
 
 ### Cloudformation templates used:
-REHL& ami=
-Windows 2012 R2 ami=
-Windows 2016 ami=
+REHL& ami=ami-0f5a8361
+Windows 2012 R2 ami=ami-231cbb4d
+Windows 2016 ami=ami-e8ef4986
 
 https://s3.ap-northeast-2.amazonaws.com/awsfakeregion/cf/base_network.template
 
+https://s3.ap-northeast-2.amazonaws.com/awsfakeregion/cf/securitygroup.template
+
+https://s3.ap-northeast-2.amazonaws.com/awsfakeregion/cf/windows_2016_autorecovery.template
+ARInstanceName=bastion
+AppSubnet=PublicAZ1
+ARInstanceSecurityGroupList=PublicRDPSecurityGroup
+Imageid=ami-e8ef4986
+InstanceType=t2.small
+Keyname=faskeawsregion  
+
+https://s3.ap-northeast-2.amazonaws.com/awsfakeregion/cf/rhel_7_autorecovery.template
+ARInstanceName=web1
+AppSubnet=PrivateAz1
+ARInstanceSecurityGroupList=PrivateWebSecurityGroup
+Imageid=ami-0f5a8361
+
+ARInstanceName=web2
+AppSubnet=PrivateAz2
+ARInstanceSecurityGroupList=PrivateWebSecurityGroup
+Imageid=ami-0f5a8361
+
 https://s3.ap-northeast-2.amazonaws.com/awsfakeregion/cf/CLB.template
+Subnets=PublicAZ1,PublicAZ2
+SecurityGroups=PublicWebSecurityGroup
+LoadBalancerName=extclb
+ASGTargets=false
+Instances=i-05cb3e650626a5f1a,i-04d645cad94c848e3
 
 https://s3.ap-northeast-2.amazonaws.com/awsfakeregion/cf/efs.template
 
@@ -46,14 +72,8 @@ https://s3.ap-northeast-2.amazonaws.com/awsfakeregion/cf/patch_baseline_rhel.tem
 
 https://s3.ap-northeast-2.amazonaws.com/awsfakeregion/cf/patch_baseline_windows.template
 
-https://s3.ap-northeast-2.amazonaws.com/awsfakeregion/cf/rhel_7_autorecovery.template
-
 https://s3.ap-northeast-2.amazonaws.com/awsfakeregion/cf/s3.template
-
-https://s3.ap-northeast-2.amazonaws.com/awsfakeregion/cf/securitygroup.template
 
 https://s3.ap-northeast-2.amazonaws.com/awsfakeregion/cf/systems_manager_service_role.template
 
 https://s3.ap-northeast-2.amazonaws.com/awsfakeregion/cf/windows_2012R2_autorecovery.template
-
-https://s3.ap-northeast-2.amazonaws.com/awsfakeregion/cf/windows_2016_autorecovery.template  
