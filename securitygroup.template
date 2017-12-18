@@ -38,6 +38,29 @@
         "GroupDescription": "Allow public RDP traffic."
       }
     },
+    "AppSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "SecurityGroupIngress": [
+          {
+            "ToPort": 8888,
+            "IpProtocol": "tcp",
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 8888
+          },
+          {
+            "ToPort": 3389,
+            "IpProtocol": "tcp",
+            "CidrIp": "172.0.0.0/8",
+            "FromPort": 3389
+          }
+        ],
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "GroupDescription": "Allow traffic for app servers"
+      }
+    },
     "PublicSSHSecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
@@ -339,6 +362,14 @@
       "Value": {
         "Fn::GetAtt": [
           "PublicRDPSecurityGroup",
+          "GroupId"
+        ]
+      }
+    },
+    "AppSecurityGroup": {
+      "Value": {
+        "Fn::GetAtt": [
+          "AppSecurityGroup",
           "GroupId"
         ]
       }
