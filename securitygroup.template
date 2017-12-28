@@ -348,6 +348,18 @@
               "Ref": "PublicRDPSecurityGroup"
             },
             "FromPort": 3389
+          },
+          {
+            "ToPort": 65535,
+            "IpProtocol": "tcp",
+            "CidrIp": "172.0.0.0/8",
+            "FromPort": 0
+          },
+          {
+            "ToPort": 65535,
+            "IpProtocol": "udp",
+            "CidrIp": "172.0.0.0/8",
+            "FromPort": 0
           }
         ],
         "VpcId": {
