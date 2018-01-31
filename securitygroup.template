@@ -30,6 +30,24 @@
             "IpProtocol": "tcp",
             "CidrIp": "0.0.0.0/0",
             "FromPort": 3389
+          },
+          {
+            "ToPort": 9443,
+            "IpProtocol": "tcp",
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 9443
+          },
+          {
+            "ToPort": 20004,
+            "IpProtocol": "tcp",
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 20004
+          },
+          {
+            "ToPort": 443,
+            "IpProtocol": "tcp",
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 443
           }
         ],
         "VpcId": {
